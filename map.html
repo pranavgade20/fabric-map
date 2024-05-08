@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>FABRIC Map</title>
+    <script>
+        (g => {
+            var h, a, k, p = "The Google Maps JavaScript API", c = "google", l = "importLibrary", q = "__ib__",
+                m = document, b = window;
+            b = b[c] || (b[c] = {});
+            var d = b.maps || (b.maps = {}), r = new Set, e = new URLSearchParams,
+                u = () => h || (h = new Promise(async (f, n) => {
+                    await (a = m.createElement("script"));
+                    e.set("libraries", [...r] + "");
+                    for (k in g) e.set(k.replace(/[A-Z]/g, t => "_" + t[0].toLowerCase()), g[k]);
+                    e.set("callback", c + ".maps." + q);
+                    a.src = `https://maps.${c}apis.com/maps/api/js?` + e;
+                    d[q] = f;
+                    a.onerror = () => h = n(Error(p + " could not load."));
+                    a.nonce = m.querySelector("script[nonce]")?.nonce || "";
+                    m.head.append(a)
+                }));
+            d[l] ? console.warn(p + " only loads once. Ignoring:", g) : d[l] = (f, ...n) => r.add(f) && u().then(() => d[l](f, ...n))
+        })({
+            key: "AIzaSyAvRdhhquiMRf74mQoBbAS6I0GpLdwmM9Q",
+            v: "weekly",
+            // Use the 'v' parameter to indicate the version to use (weekly, beta, alpha, etc.).
+            // Add other bootstrap parameters as needed, using camel case.
+        });
+    </script>
+    <script async
+            src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAvRdhhquiMRf74mQoBbAS6I0GpLdwmM9Q&loading=async&callback=initMap&signature=6mo7G3L4oMjGH3GFqtvfIyeGBT4=">
+    </script>
+
+    <script>
+        let map;
+
+        function geocodeAddress(location) {
+
+        }
+
+        loaded = false; // why the fuck is this necessary?
+        async function initMap() {
+            if (loaded) {
+                return;
+            }
+            loaded = true;
+            const {Map, InfoWindow} = await google.maps.importLibrary("maps");
+            const {AdvancedMarkerElement, PinElement} = await google.maps.importLibrary("marker");
+
+            map = new Map(document.getElementById("map"), {
+                // center on London
+                center: {lat: 51.5074, lng: 0.1278},
+                zoom: 8,
+                mapId: "951a4482d2effc92"
+            });
+            geocoder = new google.maps.Geocoder();
+
+            var locations = JSON.parse(`{{ locations|safe }}`)
+            const infoWindow = new InfoWindow();
+
+            for (var i = 0; i < locations.length; i++) {
+                const location = (locations[i]);
+                geocoder.geocode({'address': location[2]}, function (results, status) {
+                    if (status === 'OK') {
+                        var result = results[0].geometry.location
+                        var lat = result.lat()
+                        var lng = result.lng()
+                        result.lat = () => lat + (Math.random() - 0.5) / 10
+                        result.lng = () => lng + (Math.random() - 0.5) / 10
+                        const pin = new PinElement({
+                            glyph: location[1][0].toUpperCase(),
+                            scale: 1.5,
+                        });
+                        const marker = new AdvancedMarkerElement({
+                            map: map,
+                            position: result,
+                            title: location[1],
+                            content: pin.element
+                        });
+                        marker.addListener('click', ({domEvent, latLng}) => {
+                            const {target} = domEvent;
+                            infoWindow.close();
+                            infoWindow.setContent(marker.title);
+                            infoWindow.open(marker.map, marker);
+                        });
+
+                    } else {
+                        alert('Geocode was not successful for the following reason: ' + status);
+                    }
+                });
+
+            }
+        }
+
+
+        initMap();
+    </script>
+    <style>
+        #map {
+            height: 100%;
+        }
+
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+    </style>
+
+</head>
+<body onload="initMap()">
+<div id="map" style="height: 100%; width: 100%;"></div>
+</body>
+</html>
